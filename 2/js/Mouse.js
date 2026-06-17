@@ -1,4 +1,7 @@
 window.Mouse = {};
+Mouse.shift = false;
+window.addEventListener("keydown", e => { if(e.key === "Shift") Mouse.shift = true; });
+window.addEventListener("keyup",   e => { if(e.key === "Shift") Mouse.shift = false; });
 Mouse.init = function(target){
 
 	// Events!

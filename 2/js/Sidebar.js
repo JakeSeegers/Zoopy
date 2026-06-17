@@ -106,34 +106,231 @@ function Sidebar(loopy){
 	// Bibliography
 	(function(){
 		const page = new SidebarPage();
-
-		// Back button
 		backToTopButton(self, page);
 
-		// Dynamic content container
 		const container = document.createElement("div");
 		container.className = "bib_sidebar_container";
 		page.dom.appendChild(container);
 
-		function formatAuthors(entry){
-			return (entry.author||[]).map(a=>a.family||a.literal||"").filter(Boolean).join(", ");
-		}
+		// ── helpers ──────────────────────────────────────────────────
 		function getYear(entry){
 			return entry.issued && entry.issued["date-parts"] ? entry.issued["date-parts"][0][0] : "";
 		}
 		function getCitationCounts(){
 			const usage = {};
 			(loopy.bibliography||[]).forEach(e => usage[e.id] = 0);
-			const scan = (items) => items.forEach(item => {
+			[loopy.model.nodes, loopy.model.edges].forEach(items => items.forEach(item => {
 				if(!item.sources) return;
 				try { JSON.parse(item.sources).forEach(id => { if(id in usage) usage[id]++; }); } catch(e){}
-			});
-			scan(loopy.model.nodes);
-			scan(loopy.model.edges);
+			}));
 			return usage;
 		}
+		function formatAuthorsShort(entry){
+			return (entry.author||[]).map(a=>a.family||a.literal||"").filter(Boolean).join(", ");
+		}
+		function parenthetical(entry){
+			const authors = entry.author || [];
+			const year = getYear(entry) || "n.d.";
+			let name;
+			if(authors.length === 0) name = entry.title ? entry.title.split(" ").slice(0,3).join(" ") : "?";
+			else if(authors.length === 1) name = authors[0].family || authors[0].literal || "?";
+			else if(authors.length === 2) name = `${authors[0].family||authors[0].literal} & ${authors[1].family||authors[1].literal}`;
+			else name = `${authors[0].family||authors[0].literal} et al.`;
+			return `(${name}, ${year})`;
+		}
+		function apa7(entry){
+			const authors = entry.author || [];
+			const year = getYear(entry) || "n.d.";
+			let authorStr;
+			if(authors.length === 0){
+				authorStr = entry.title ? entry.title.split(" ").slice(0,4).join(" ") : "(No author)";
+			} else if(authors.length <= 20){
+				const formatted = authors.map((a,i) => {
+					const fam = a.family || a.literal || "";
+					const giv = a.given ? a.given.split(" ").map(n=>n[0]+".").join(" ") : "";
+					return giv ? `${fam}, ${giv}` : fam;
+				});
+				authorStr = formatted.length === 1 ? formatted[0]
+					: formatted.slice(0,-1).join(", ") + ", & " + formatted[formatted.length-1];
+			} else {
+				const first19 = authors.slice(0,19).map(a=>{
+					const fam = a.family || a.literal || "";
+					const giv = a.given ? a.given.split(" ").map(n=>n[0]+".").join(" ") : "";
+					return giv ? `${fam}, ${giv}` : fam;
+				});
+				const last = authors[authors.length-1];
+				const lastFam = last.family || last.literal || "";
+				authorStr = first19.join(", ") + ", ... & " + lastFam;
+			}
+			const title = entry.title || "(No title)";
+			const journal = entry["container-title"] || "";
+			const vol = entry.volume ? `${entry.volume}` : "";
+			const issue = entry.issue ? `(${entry.issue})` : "";
+			const pages = entry.page || "";
+			const doi = entry.DOI ? `https://doi.org/${entry.DOI}` : (entry.URL || "");
+			let citation = `${authorStr} (${year}). ${title}.`;
+			if(journal){
+				citation += ` ${journal}`;
+				if(vol) citation += `, ${vol}${issue}`;
+				if(pages) citation += `, ${pages}`;
+				citation += ".";
+			} else if(entry.publisher){
+				citation += ` ${entry.publisher}.`;
+			}
+			if(doi) citation += ` ${doi}`;
+			return citation;
+		}
 
-		function renderBibliography(){
+		// ── pending placement indicator ──────────────────────────────
+		const pendingBar = document.createElement("div");
+		pendingBar.className = "bib_pending_bar";
+		pendingBar.style.display = "none";
+		pendingBar.innerHTML = "⬡ Shift+click an arrow to place citation &nbsp;<span class='bib_pending_cancel'>✕ cancel</span>";
+		pendingBar.querySelector(".bib_pending_cancel").onclick = () => {
+			loopy.pendingEdgeLabel = null;
+			publish("pending_edge_label/cleared");
+		};
+		page.dom.insertBefore(pendingBar, container);
+		subscribe("pending_edge_label/cleared", () => { pendingBar.style.display = "none"; });
+
+		function activatePending(text){
+			loopy.pendingEdgeLabel = text;
+			pendingBar.style.display = "block";
+		}
+
+		// ── section builder ──────────────────────────────────────────
+		function makeSection(label, content, opts = {}){
+			const wrap = document.createElement("div");
+			wrap.className = "bib_section";
+
+			const hdr = document.createElement("div");
+			hdr.className = "bib_section_hdr";
+			hdr.textContent = label;
+			if(opts.shiftable){
+				const hint = document.createElement("span");
+				hint.className = "bib_shift_hint";
+				hint.textContent = " shift+click → place on arrow";
+				hdr.appendChild(hint);
+				hdr.title = "Shift+click to place this text on an arrow";
+				hdr.onclick = e => {
+					if(e.shiftKey){ activatePending(content); }
+				};
+				hdr.classList.add("bib_section_shiftable");
+			}
+			wrap.appendChild(hdr);
+
+			if(opts.editable){
+				const ta = document.createElement("textarea");
+				ta.className = "bib_section_textarea";
+				ta.value = content;
+				ta.oninput = () => opts.onchange && opts.onchange(ta.value);
+				// shift+click textarea header should use the textarea's current value
+				if(opts.shiftable){
+					hdr.onclick = e => { if(e.shiftKey) activatePending(ta.value); };
+				}
+				wrap.appendChild(ta);
+			} else {
+				const body = document.createElement("div");
+				body.className = "bib_section_body";
+				if(opts.isLink){
+					const a = document.createElement("a");
+					a.href = content; a.target = "_blank";
+					a.textContent = content;
+					body.appendChild(a);
+				} else {
+					body.textContent = content;
+				}
+				wrap.appendChild(body);
+			}
+			return wrap;
+		}
+
+		// ── detail view ──────────────────────────────────────────────
+		function renderDetail(entry){
+			container.innerHTML = "";
+
+			const backBtn = document.createElement("div");
+			backBtn.className = "bib_back_btn";
+			backBtn.textContent = "← all references";
+			backBtn.onclick = renderList;
+			container.appendChild(backBtn);
+
+			const heading = document.createElement("div");
+			heading.className = "bib_detail_heading";
+			const yr = getYear(entry);
+			heading.textContent = `${formatAuthorsShort(entry)}${yr ? " ("+yr+")" : ""}`;
+			container.appendChild(heading);
+
+			// Parenthetical
+			container.appendChild(makeSection("Parenthetical citation", parenthetical(entry), {shiftable:true}));
+
+			// URL
+			if(entry.URL || entry.DOI){
+				const url = entry.URL || `https://doi.org/${entry.DOI}`;
+				container.appendChild(makeSection("URL", url, {isLink:true}));
+			}
+
+			// APA 7th
+			container.appendChild(makeSection("APA 7th edition", apa7(entry), {shiftable:true}));
+
+			// Abstract
+			if(entry.abstract){
+				container.appendChild(makeSection("Abstract", entry.abstract, {shiftable:true}));
+			}
+
+			// User notes
+			const notesHeader = document.createElement("div");
+			notesHeader.className = "bib_section_hdr bib_notes_header";
+			notesHeader.textContent = "Notes";
+			container.appendChild(notesHeader);
+
+			if(!entry._zoopyNotes) entry._zoopyNotes = [];
+			const notesWrap = document.createElement("div");
+			notesWrap.id = "bib_notes_wrap";
+			container.appendChild(notesWrap);
+
+			function renderNotes(){
+				notesWrap.innerHTML = "";
+				entry._zoopyNotes.forEach((note, i) => {
+					const noteEl = makeSection(`Note ${i+1}`, note, {
+						editable: true,
+						shiftable: true,
+						onchange: val => {
+							entry._zoopyNotes[i] = val;
+							publish("model/changed");
+						}
+					});
+					const del = document.createElement("span");
+					del.className = "bib_note_del";
+					del.textContent = "✕";
+					del.title = "Delete note";
+					del.onclick = () => {
+						entry._zoopyNotes.splice(i, 1);
+						publish("model/changed");
+						renderNotes();
+					};
+					noteEl.querySelector(".bib_section_hdr").appendChild(del);
+					notesWrap.appendChild(noteEl);
+				});
+
+				const addBtn = document.createElement("button");
+				addBtn.className = "bib_add_note_btn";
+				addBtn.textContent = "+ Add note";
+				addBtn.onclick = () => {
+					entry._zoopyNotes.push("");
+					publish("model/changed");
+					renderNotes();
+					// Focus the new textarea
+					const tas = notesWrap.querySelectorAll("textarea");
+					if(tas.length) tas[tas.length-1].focus();
+				};
+				notesWrap.appendChild(addBtn);
+			}
+			renderNotes();
+		}
+
+		// ── list view ────────────────────────────────────────────────
+		function renderList(){
 			container.innerHTML = "";
 			const bib = loopy.bibliography || [];
 
@@ -147,7 +344,6 @@ function Sidebar(loopy){
 
 			const usage = getCitationCounts();
 			const citedCount = bib.filter(e=>usage[e.id]>0).length;
-
 			const summary = document.createElement("div");
 			summary.className = "bib_sidebar_summary";
 			summary.textContent = `${bib.length} references · ${citedCount} cited`;
@@ -158,13 +354,12 @@ function Sidebar(loopy){
 			sorted.forEach(entry => {
 				const div = document.createElement("div");
 				div.className = "bib_sidebar_entry" + (usage[entry.id] > 0 ? " cited" : "");
+				div.style.cursor = "pointer";
 
-				const topLine = document.createElement("div");
-				topLine.className = "bib_sidebar_meta";
-				const authors = formatAuthors(entry);
-				const year = getYear(entry);
-				topLine.textContent = [authors, year].filter(Boolean).join(" ");
-				div.appendChild(topLine);
+				const meta = document.createElement("div");
+				meta.className = "bib_sidebar_meta";
+				meta.textContent = [formatAuthorsShort(entry), getYear(entry)].filter(Boolean).join(" ");
+				div.appendChild(meta);
 
 				const title = document.createElement("div");
 				title.className = "bib_sidebar_title";
@@ -185,13 +380,15 @@ function Sidebar(loopy){
 					div.appendChild(badge);
 				}
 
+				div.onclick = () => renderDetail(entry);
 				container.appendChild(div);
 			});
 		}
 
+		function renderBibliography(){ renderList(); }
 		page.onshow = renderBibliography;
-		subscribe("bibliography/changed", () => { if(self.currentPage === page) renderBibliography(); });
-		subscribe("model/changed",         () => { if(self.currentPage === page) renderBibliography(); });
+		subscribe("bibliography/changed", () => { if(self.currentPage === page) renderList(); });
+		subscribe("model/changed",         () => { if(self.currentPage === page && !container.querySelector(".bib_back_btn")) renderList(); });
 
 		self.addPage("Bibliography", page);
 	})();

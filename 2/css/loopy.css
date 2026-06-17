@@ -485,6 +485,126 @@ MODAL
 	font-style: italic;
 }
 
+/* Bibliography pending placement bar */
+.bib_pending_bar{
+	background: #5a7a5a;
+	color: #fff;
+	font-size: 12px;
+	padding: 6px 10px;
+	margin: -20px -15px 12px -25px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.bib_pending_cancel{
+	cursor: pointer;
+	opacity: 0.8;
+	margin-left: 6px;
+}
+.bib_pending_cancel:hover{ opacity: 1; }
+
+/* Bibliography back button & detail heading */
+.bib_back_btn{
+	font-size: 13px;
+	color: #777;
+	cursor: pointer;
+	margin-bottom: 10px;
+}
+.bib_back_btn:hover{ color: #555; }
+.bib_detail_heading{
+	font-size: 14px;
+	font-weight: 400;
+	color: #333;
+	margin-bottom: 12px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid rgba(150,150,150,0.4);
+}
+
+/* Bibliography sections */
+.bib_section{
+	margin-bottom: 10px;
+}
+.bib_section_hdr{
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #888;
+	margin-bottom: 3px;
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+}
+.bib_section_shiftable{
+	cursor: default;
+}
+.bib_section_shiftable:hover .bib_shift_hint{ opacity: 1; }
+.bib_shift_hint{
+	font-size: 10px;
+	text-transform: none;
+	letter-spacing: 0;
+	color: #aaa;
+	opacity: 0;
+	transition: opacity 0.15s;
+	font-style: italic;
+}
+.bib_section_body{
+	font-size: 12px;
+	color: #444;
+	line-height: 1.4;
+	background: rgba(0,0,0,0.05);
+	border-radius: 3px;
+	padding: 5px 7px;
+	word-break: break-word;
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	user-select: text;
+	cursor: text;
+}
+.bib_section_body a{
+	color: #5a7a9a;
+	word-break: break-all;
+}
+.bib_section_textarea{
+	width: calc(100% - 14px);
+	min-height: 60px;
+	font-size: 12px;
+	font-weight: 100;
+	padding: 5px 7px;
+	border: none;
+	border-radius: 3px;
+	background: rgba(0,0,0,0.05);
+	resize: vertical;
+	color: #333;
+	font-family: inherit;
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	user-select: text;
+}
+.bib_notes_header{
+	margin-top: 4px;
+}
+.bib_note_del{
+	margin-left: auto;
+	cursor: pointer;
+	color: #bbb;
+	font-size: 12px;
+}
+.bib_note_del:hover{ color: #888; }
+.bib_add_note_btn{
+	width: 100%;
+	background: rgba(0,0,0,0.08);
+	border: none;
+	border-radius: 3px;
+	padding: 5px;
+	font-size: 13px;
+	font-weight: 100;
+	color: #666;
+	cursor: pointer;
+	margin-top: 4px;
+	font-family: inherit;
+}
+.bib_add_note_btn:hover{ background: rgba(0,0,0,0.13); color: #444; }
+
 /* Bibliography sidebar page */
 .bib_sidebar_container{
 	font-weight: 100;

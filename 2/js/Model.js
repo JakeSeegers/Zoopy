@@ -370,6 +370,28 @@ function Model(loopy){
 		if(self.loopy.mode!==Loopy.MODE_EDIT) return;
 		if(self.loopy.tool===Loopy.TOOL_ERASE) return;
 
+		// Shift+click while a citation/note is pending → place it on the nearest edge
+		if(Mouse.shift && loopy.pendingEdgeLabel != null){
+			// Try label area first, then fall back to nearest edge midpoint
+			let target = self.getEdgeByPoint(Mouse.x, Mouse.y);
+			if(!target){
+				let best = Infinity;
+				self.edges.forEach(edge => {
+					const mb = edge.getBoundingBox();
+					const cx = (mb.left+mb.right)/2, cy = (mb.top+mb.bottom)/2;
+					const d = (cx-Mouse.x)**2 + (cy-Mouse.y)**2;
+					if(d < best){ best = d; target = edge; }
+				});
+			}
+			if(target){
+				target.customLabel = loopy.pendingEdgeLabel;
+				loopy.pendingEdgeLabel = null;
+				publish("pending_edge_label/cleared");
+				publish("model/changed");
+				return;
+			}
+		}
+
 		// Did you click on a node? If so, edit THAT node.
 		const clickedNode = self.getNodeByPoint(Mouse.x, Mouse.y);
 		if(clickedNode){
