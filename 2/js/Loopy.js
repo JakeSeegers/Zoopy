@@ -174,8 +174,10 @@ function Loopy(config){
 			reader.readAsText(file);
 			reader.onload = readerEvent => {
 				try {
-					const entries = JSON.parse(readerEvent.target.result);
-					if(!Array.isArray(entries)) throw new Error("Expected a CSL-JSON array");
+					const parsed = JSON.parse(readerEvent.target.result);
+					// Zotero wraps entries in {"items": [...]} — handle both formats
+					const entries = Array.isArray(parsed) ? parsed : (parsed.items || parsed.references || null);
+					if(!entries || !Array.isArray(entries)) throw new Error("Expected a CSL-JSON array or an object with an 'items' array");
 					loopy.bibliography = entries;
 					publish("bibliography/changed");
 					publish("model/changed");
