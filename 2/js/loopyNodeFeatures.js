@@ -157,3 +157,30 @@ injectProperty("node", "interactive",{
         advanced: true
     }
 });
+injectProperty("node", "notes",{
+    defaultValue:"",
+    persist:{index:13, jsonOnly:true, deserializeFunc:decodeURIComponent},
+    sideBar:{
+        index: 20,
+        label: "Notes :",
+        textarea: true,
+    }
+});
+injectProperty("node", "sources",{
+    defaultValue:"",
+    persist:{index:14, jsonOnly:true, deserializeFunc:decodeURIComponent},
+    sideBar:{
+        index: 21,
+        label: "Sources :",
+        textarea: true,
+    }
+});
+injectProperty("node", "sourceDescription",{
+    defaultValue:"",
+    persist:{index:15, jsonOnly:true, deserializeFunc:decodeURIComponent},
+    sideBar:{
+        index: 22,
+        label: "Source description :",
+        textarea: true,
+    }
+});
