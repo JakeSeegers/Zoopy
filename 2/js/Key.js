@@ -23,8 +23,15 @@
 
 	// Event Handling
 	// TODO: cursors stay when click button? orrrrr switch over to fake-cursor.
+	function isTypingInField(){
+		const el = document.activeElement;
+		if(!el) return false;
+		const tag = el.tagName;
+		return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+	}
 	Key.onKeyDown = function(event){
 		if(window.loopy && loopy.modal && loopy.modal.isShowing) return;
+		if(isTypingInField()) return;
 		// noinspection JSDeprecatedSymbols
 		const code = KEY_CODES[event.keyCode];
 		//console.log(event.keyCode, event.code, event.key,event.charCode);
@@ -36,6 +43,7 @@
 	};
 	Key.onKeyUp = function(event){
 		if(window.loopy && loopy.modal && loopy.modal.isShowing) return;
+		if(isTypingInField()) return;
 		// noinspection JSDeprecatedSymbols
 		const code = KEY_CODES[event.keyCode];
 		if(!code) return;
