@@ -1,54 +1,89 @@
-# Default
+# Welcome to Zoopy
 
+Zoopy is a tool for building and simulating causal loop diagrams — visual maps of how things influence each other over time.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur tristique ullamcorper fringilla. Aenean tortor ipsum, pharetra non lectus in, elementum tincidunt urna. Suspendisse ac ex a ante bibendum euismod eu et ipsum. Praesent sit amet placerat lorem. Vivamus dignissim blandit sagittis. Aliquam tempus tortor est, vel vulputate lorem porttitor ac. Vivamus tristique faucibus odio in ultrices.
+## Quick start
 
-Phasellus sed neque leo. Vivamus tincidunt laoreet purus, id placerat magna sollicitudin eu. Cras eget erat a ante convallis ullamcorper in sit amet ante. Proin at dui vitae mi eleifend ultrices a vitae nisi. Mauris sed nunc aliquet, laoreet nunc sit amet, mattis erat. Morbi vestibulum pellentesque justo ac feugiat. Sed enim velit, feugiat quis aliquam quis, tincidunt id lacus.
+**Draw a node:** use the ink tool and draw a circle. Give it a name in the sidebar.
 
-Etiam lorem tortor, ultricies et vulputate at, aliquet sit amet felis. Vivamus orci lacus, blandit nec justo pharetra, volutpat aliquam dolor. In et enim nisl. Praesent mauris odio, convallis vitae erat eget, maximus luctus risus. Etiam est libero, aliquam eu erat nec, porta porttitor enim. Integer lobortis magna eu convallis euismod. Ut varius metus vitae ligula congue viverra. Mauris scelerisque arcu elit, vel malesuada nisi maximus vitae. Cras ac elit neque. Integer sit amet odio non elit malesuada sagittis ut vitae nisl. Nulla in sagittis ipsum. Sed a dolor non justo ultricies varius.
+**Draw an arrow:** start drawing from one node and end on another. The sidebar lets you set whether the relationship reinforces (+) or inverts (–) the effect.
 
-Fusce eleifend sapien vitae euismod fermentum. Nam ut sem facilisis, scelerisque felis quis, feugiat dolor. Curabitur sodales massa quis velit luctus, nec imperdiet libero molestie. Nunc in nisl justo. Suspendisse potenti. Vestibulum ac arcu massa. Proin quis nibh et quam imperdiet condimentum. Pellentesque fringilla feugiat eros in aliquam. Phasellus ex nulla, facilisis et leo et, malesuada consequat mi. Integer vel ornare erat. Etiam in tortor venenatis, mollis magna quis, imperdiet erat. Mauris interdum maximus dictum. Curabitur at tincidunt neque, at volutpat urna.
+**Run a simulation:** switch to Play mode and click a node to send a signal through the system. Watch how it flows and amplifies or dampens across the diagram.
 
-Pellentesque aliquet arcu velit, nec gravida enim pulvinar non. Duis sed viverra odio. Mauris lacinia mauris et urna faucibus porta. Praesent elit arcu, malesuada a sagittis a, pharetra eu nisl. Aenean quis odio tortor. Vestibulum id rhoncus massa. Suspendisse malesuada lorem quis nibh elementum pharetra. Phasellus sit amet lacinia purus, id mattis felis.
+## Edit mode tools
 
-Phasellus sit amet dignissim odio. Vestibulum blandit nibh a dui fermentum, sed porta neque venenatis. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Aliquam viverra augue sit amet odio molestie, vitae bibendum nulla luctus. Aenean arcu ipsum, gravida ut nisi eu, tempus aliquam elit. Curabitur ac dolor id quam venenatis interdum non vitae neque. Nunc commodo condimentum rutrum. Aenean suscipit consectetur erat non dictum. Phasellus gravida odio quis leo tristique, molestie vestibulum purus tincidunt. Pellentesque tristique euismod mattis. Aliquam sodales imperdiet congue. Duis ac tristique neque, a tincidunt erat.
+| Tool | What it does |
+|------|-------------|
+| Ink | Draw nodes (circles) and arrows |
+| Text | Add a floating label anywhere on the canvas |
+| Hand | Drag nodes, arrows, and labels to reposition them |
+| Eraser | Delete nodes, arrows, or labels |
 
-Aenean consequat, arcu eu sollicitudin vulputate, ante magna aliquam nibh, ac tincidunt arcu erat sed ante. Sed rhoncus arcu sagittis elit facilisis condimentum. Nullam eu sapien magna. Aliquam aliquam bibendum enim id finibus. Fusce mi dolor, sollicitudin id mi eget, pretium pellentesque ligula. Aenean molestie est non eros interdum, eu tempor elit mattis. Nullam nec nunc vulputate, tristique leo non, efficitur magna. Vivamus orci dui, vestibulum a mattis sit amet, sodales vitae nulla.
+Click any element to select it and edit its properties in the sidebar.
 
-In pellentesque eros nibh, sed sodales odio imperdiet sit amet. Aliquam auctor nec nisi ut pharetra. Aenean tincidunt consectetur magna, et consectetur risus aliquet non. Curabitur condimentum felis in porta efficitur. Vivamus id dui sodales, vulputate felis et, posuere arcu. Vestibulum placerat malesuada augue pharetra aliquet. Pellentesque eu magna nec neque egestas tempus eu in tortor. Praesent sit amet scelerisque nibh. Nulla tempor odio nisi, nec auctor enim rhoncus sit amet. Donec pharetra orci sed libero varius pharetra. Integer posuere tellus in elit faucibus, vel sollicitudin tortor viverra. Etiam vitae turpis hendrerit, rhoncus leo eget, tempor nisl. Quisque consectetur, nisl dapibus euismod hendrerit, lectus nisl tincidunt velit, vitae egestas urna nisl euismod arcu.
+## Sidebar panels
 
-Curabitur id massa dolor. Quisque nibh orci, consequat vel metus eget, fringilla condimentum lacus. Nulla ac ultrices ligula. Cras hendrerit nisl nec purus consectetur rutrum non in nulla. Phasellus viverra iaculis nibh, et congue nisl porta id. Praesent sodales semper sem id congue. Aliquam ut ipsum tristique, facilisis erat vel, accumsan dui. Ut varius justo hendrerit magna suscipit placerat. Duis consectetur massa eu semper scelerisque. Donec erat risus, aliquam porttitor semper eget, aliquam vitae neque. Fusce aliquet egestas turpis, posuere eleifend ipsum convallis in. Praesent condimentum sit amet mauris a gravida. Praesent ultrices magna non nisi faucibus, viverra aliquam magna viverra. Maecenas molestie condimentum bibendum. Sed quam eros, semper non mattis sit amet, porttitor ac felis.
+**When nothing is selected** — the global panel appears. Set the overall mode (Simple or Advanced), camera behavior, and save/load your diagram.
 
-Donec posuere, arcu vel interdum mollis, ligula tortor tincidunt diam, in cursus sapien dui nec dolor. Quisque mattis massa sed eros imperdiet, vitae porta sapien dapibus. Quisque suscipit ultrices orci sed accumsan. Nam imperdiet arcu ligula, id sollicitudin dolor commodo sit amet. Sed porttitor sem interdum neque bibendum dictum. Aenean aliquet non tellus id malesuada. Maecenas ut condimentum turpis.
+**When a node is selected** — set its name, color, starting fill level, and (in Advanced mode) size, overflow thresholds, and interactivity.
+
+**When an arrow is selected** — set the relationship direction (same/inverted effect) and, in Advanced mode, signal filtering, valency, and color behavior.
+
+## Saving your work
+
+- **Save as link** — generates a compressed URL you can bookmark or share (Ctrl-S)
+- **Save as file** — downloads a `.loopy` file to your computer
+- **Load from file** — opens a previously saved `.loopy` file
+
+## Simple vs Advanced mode
+
+**Simple mode** is the default. Nodes and arrows have a small set of properties — enough to model most systems.
+
+**Advanced mode** unlocks extra controls: node size and capacity, overflow/underflow thresholds, signal filtering, color logic, and more. Enable it with the mode slider at the top of the sidebar.
+
+## Tips
+
+- Draw multiple arrows between the same two nodes to make a stronger relationship.
+- Draw a longer arrow to introduce a time delay in the signal.
+- Use the **?** buttons next to any feature to see an explanation and examples for that specific setting.
+
+---
 
 # Global
 
-Curabitur sit amet tristique justo, vitae pretium dolor. Aenean tincidunt et eros eget pellentesque. Maecenas semper nibh a bibendum euismod. Integer tortor sem, pharetra vitae erat sit amet, ultrices lobortis erat. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Integer fermentum sapien eget felis dapibus elementum. Phasellus ultricies, orci quis vehicula congue, massa lectus viverra tortor, at mattis est nulla hendrerit quam. Nulla viverra laoreet orci a egestas. Praesent aliquet, augue nec bibendum sollicitudin, odio quam eleifend quam, vitae viverra elit est eu orci. In non tristique libero. Integer suscipit tellus augue, quis pellentesque elit finibus in. Praesent luctus, dolor in sollicitudin suscipit, orci purus porta arcu, sed euismod libero mauris sed lectus. Integer tristique lacus non posuere faucibus. Suspendisse elit lectus, condimentum sagittis condimentum ut, rutrum ac turpis. Etiam dictum diam neque, vitae porta libero rhoncus eget. In lacinia ex nec nulla suscipit varius.
+The global panel (visible when nothing is selected) controls diagram-wide settings.
 
-Donec pharetra nulla sed ligula elementum, vitae dignissim turpis lobortis. Nam nec suscipit ipsum. Donec vehicula vestibulum cursus. Proin ultrices tellus tellus, vitae aliquam ante ullamcorper ut. Nulla mattis eu leo et posuere. Nulla tellus augue, posuere vitae erat eget, interdum ornare lacus. Nam non nibh quam. Morbi rutrum metus et gravida posuere. Sed molestie vehicula dui, id eleifend diam blandit ac. Mauris luctus venenatis diam, vitae blandit odio. Ut efficitur sagittis risus sed rhoncus. Vivamus sollicitudin felis vel neque efficitur, id pellentesque lorem gravida. Phasellus in enim non tellus fermentum placerat quis sit amet nunc. Suspendisse non placerat erat, non sodales enim.
+**Mode** — switches between Simple and Advanced. Advanced unlocks extra node and arrow properties.
 
-In vestibulum sodales ante, et malesuada lacus condimentum nec. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Praesent sit amet purus tempor, sollicitudin tellus non, consectetur nulla. Morbi neque orci, commodo ac maximus vel, mollis accumsan odio. Integer ut ultricies ipsum. Sed diam sapien, mattis ut tristique sit amet, venenatis luctus tortor. Donec fermentum a odio sit amet pretium. Donec iaculis sem ac nunc hendrerit, non consequat dolor rhoncus.
+**Color logic** *(Advanced)* — when enabled, signal color carries meaning and can be filtered or converted by arrows.
 
-Cras nunc erat, aliquam eget consectetur nec, pulvinar non lacus. Sed eget lacinia nunc. Duis ligula enim, hendrerit a erat ac, malesuada iaculis tortor. Nunc finibus ac ex in dapibus. Integer iaculis dignissim finibus. Nulla ornare sem ut risus ultrices, tristique hendrerit enim blandit. Nullam ullamcorper arcu at magna euismod fringilla. Sed hendrerit vitae tellus a imperdiet. Ut nec semper urna. Integer posuere semper magna, vitae eleifend ligula dapibus sed. Vestibulum aliquet turpis facilisis orci tristique dignissim. Aliquam erat volutpat. Etiam nulla leo, tincidunt sit amet ligula quis, mattis ornare elit.
-
-In id rhoncus risus. Ut eu mattis ante. Donec sit amet ante et libero malesuada scelerisque nec a leo. Suspendisse pellentesque ipsum eu nulla pharetra, ac fringilla justo tempus. Fusce varius tortor in dictum posuere. Nulla commodo ultricies pretium. Praesent vitae ante nec urna blandit pretium. Vivamus venenatis auctor mi. Quisque massa odio, tempor id luctus id, dapibus a tortor. Integer eget eleifend diam.
-
-Integer non lorem eget nisl facilisis commodo. Cras elementum rhoncus convallis. Duis ac justo interdum erat commodo porttitor. Duis auctor arcu eu faucibus sagittis. Fusce ac erat scelerisque, vehicula nisi sed, mattis risus. Donec euismod elit sit amet faucibus tincidunt. Etiam eget eleifend mauris. Duis aliquet libero a mi tristique, at luctus quam blandit. Donec consectetur neque dui, at consequat enim luctus sit amet. Fusce viverra nibh eget egestas tincidunt. Aliquam in ultrices metus, id gravida diam. Nam ut arcu ac ligula auctor ullamcorper luctus vitae velit. Nunc sit amet turpis enim. In lobortis, metus ac pulvinar commodo, tortor lectus auctor nisi, eget tempus sem metus at leo.
-
-Donec a dui eu leo efficitur blandit. Vivamus egestas viverra odio, eu faucibus elit scelerisque in. Sed risus eros, porttitor vel commodo ut, blandit at lacus. Nulla iaculis vehicula dui, nec tincidunt mi pellentesque aliquam. Fusce eu magna fringilla, ultrices mi eu, posuere felis. Suspendisse eu convallis turpis, a dapibus justo. Praesent rhoncus sapien ac enim facilisis, non eleifend purus lacinia. Suspendisse pulvinar erat a gravida blandit. Aliquam sed purus nulla. Aenean pretium condimentum elementum.
-
-Quisque iaculis ligula nec metus fermentum tincidunt. Fusce vel nisi vel dui viverra egestas. Maecenas pretium, velit non consectetur pretium, arcu sem aliquet mauris, et tempus neque lacus lobortis turpis. Nullam id sodales augue. Mauris sit amet vulputate justo. Sed quis ultrices lectus, sed tempus nisl. Mauris viverra velit quis leo dapibus, a tristique ex iaculis. Mauris at bibendum magna, id porttitor leo. Vestibulum in ex commodo, sodales neque in, aliquet metus.
+**Camera** — controls how the viewport behaves during simulation:
+- *Resize to scene* — zooms to fit all nodes
+- *Follow signals* — camera tracks active signals as they travel
+- *User controllable* — free pan and zoom
 
 <hr id="choice_0"/>
 
 # Node
 
-Proin ex sem, vehicula vitae purus ac, viverra rutrum felis. Fusce vel dolor et tortor pharetra fringilla. Vestibulum vulputate tellus et diam cursus dignissim. Phasellus tempus vulputate metus sed egestas. In hac habitasse platea dictumst. Nullam id rutrum libero. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus aliquam ipsum malesuada consequat bibendum. Quisque arcu magna, consequat cursus sapien nec, vehicula dignissim velit. Nullam vitae semper lectus. Nullam faucibus laoreet turpis in molestie.
+A node represents a variable, quantity, or concept in your system. Its fill level (shown visually as how full the circle is) changes as signals flow through the diagram.
 
-Curabitur placerat justo a ultricies rutrum. Praesent mattis tristique sodales. Ut et ullamcorper massa. Proin tincidunt nunc ut vulputate rhoncus. Ut lacinia interdum aliquet. Nulla eget enim non dui elementum rhoncus. Mauris dictum est at enim aliquam lacinia. Morbi erat risus, sagittis congue nibh at, ultricies porttitor lacus. Ut consequat, nulla vitae aliquam dignissim, velit erat dictum turpis, id aliquet mi quam nec turpis. Mauris venenatis viverra fermentum. Mauris pharetra mattis felis, sed facilisis diam bibendum eget. 
+**Name** — the label shown inside the circle.
+
+**Color** — the hue of the node. In color logic mode this affects signal behavior.
+
+**Starting fill** — how full the node is at the start of a simulation (Empty, 25%, 50%, 75%, Full, or Dead).
+
+**Size** *(Advanced)* — controls the node's capacity. Tiny nodes act as booleans; larger nodes hold more signal before overflowing.
+
+**Overflow / Underflow threshold** *(Advanced)* — the fill level at which the node emits overflow or underflow signals to connected arrows.
+
+**Aggregation latency** *(Advanced)* — adds a delay before incoming signals are applied to the node's fill level.
+
+**Explode** *(Advanced)* — causes the node to be destroyed when it reaches full or empty.
+
+**Interactivity** *(Advanced)* — controls whether the user can click the node during Play mode to send signals manually.
 
 <hr id="choice_1"/>
 
 <iframe width="500" height="440" style="border: 0;" src="?embed=1&signal=[1,1]&data=[[[1,718,355,1,%22something%22,4,1,0,0,0,0],[2,720,514,1,%22something%2520else%22,5,1,0,0,0,0]],[[2,1,94,-1,0,0,-1,-1,%22%22,0],[1,2,89,1,0,0,-1,-1,%22%22,0]],[[924,443,%22need%2520ideas%2520on%2520what%2520to%250Asimulate%253F%2520how%2520about%253A%250A%250A%25E3%2583%25BBtechnology%250A%25E3%2583%25BBenvironment%250A%25E3%2583%25BBeconomics%250A%25E3%2583%25BBbusiness%250A%25E3%2583%25BBpolitics%250A%25E3%2583%25BBculture%250A%25E3%2583%25BBpsychology%250A%250Aor%2520better%2520yet%252C%2520a%250A*combination*%2520of%250Athose%2520systems.%250Ahappy%2520modeling!%22,0,-1]],[2,1,0,0,0]%5D"></iframe>
-
-
