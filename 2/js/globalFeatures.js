@@ -68,7 +68,7 @@ injectProperty("loopy", "afterAll",{
         <hr/>
         <span class='mini_button' onclick='publish("load/bibliography")'>import bibliography (CSL-JSON)</span>
         <br>
-        <br><span class='mini_button' onclick='publish("modal",["bibliography"])'>view bibliography</span>
+        <br><span class='mini_button' onclick='loopy.sidebar.showPage("Bibliography")'>view bibliography</span>
         <br>
         <div class="adv">
             <hr/>
