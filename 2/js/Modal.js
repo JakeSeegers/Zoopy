@@ -310,6 +310,99 @@ function Modal(loopy){
 		self.addPage("save_gif", page);
 	})();
 
+	// Bibliography
+	(function(){
+		const page = new Page();
+		page.width = 700;
+		page.height = 560;
+
+		const container = document.createElement("div");
+		container.className = "bib_modal_container";
+		page.dom.appendChild(container);
+
+		function formatAuthors(entry){
+			return (entry.author||[]).map(a=>{
+				if(a.literal) return a.literal;
+				return [a.family,a.given].filter(Boolean).join(", ");
+			}).join("; ");
+		}
+		function getYear(entry){
+			return entry.issued && entry.issued["date-parts"] ? entry.issued["date-parts"][0][0] : "";
+		}
+
+		page.onshow = function(){
+			container.innerHTML = "";
+			const bib = loopy.bibliography || [];
+
+			const header = document.createElement("div");
+			header.className = "bib_modal_header";
+
+			if(bib.length === 0){
+				header.textContent = "No bibliography loaded.";
+				container.appendChild(header);
+				const hint = document.createElement("p");
+				hint.style.color = "#777";
+				hint.textContent = "Import a CSL-JSON file from the main panel to get started.";
+				container.appendChild(hint);
+				return;
+			}
+
+			// Count citations across nodes and edges
+			const usage = {};
+			bib.forEach(e => usage[e.id] = []);
+			const scan = (items, typeName) => items.forEach(item => {
+				if(!item.sources) return;
+				let ids;
+				try { ids = JSON.parse(item.sources); } catch(e){ return; }
+				ids.forEach(id => { if(usage[id]) usage[id].push(`${typeName}: ${item.label||item.customLabel||item.id||"?"}`); });
+			});
+			scan(loopy.model.nodes, "node");
+			scan(loopy.model.edges, "arrow");
+
+			const citedCount = bib.filter(e=>usage[e.id].length>0).length;
+			header.textContent = `${bib.length} references · ${citedCount} cited in this diagram`;
+			container.appendChild(header);
+
+			const sorted = [...bib].sort((a,b)=>(usage[b.id].length - usage[a.id].length) || (getYear(b)||0)-(getYear(a)||0));
+
+			sorted.forEach(entry => {
+				const div = document.createElement("div");
+				div.className = "bib_entry" + (usage[entry.id].length > 0 ? " cited" : "");
+
+				const title = document.createElement("div");
+				title.className = "bib_title";
+				title.textContent = entry.title || "(no title)";
+				div.appendChild(title);
+
+				const meta = document.createElement("div");
+				meta.className = "bib_meta";
+				const journal = entry["container-title"] || entry.publisher || "";
+				meta.textContent = [formatAuthors(entry), getYear(entry), journal].filter(Boolean).join(" · ");
+				div.appendChild(meta);
+
+				if(entry.DOI){
+					const doiLink = document.createElement("a");
+					doiLink.className = "bib_doi";
+					doiLink.href = `https://doi.org/${entry.DOI}`;
+					doiLink.target = "_blank";
+					doiLink.textContent = `doi:${entry.DOI}`;
+					div.appendChild(doiLink);
+				}
+
+				if(usage[entry.id].length > 0){
+					const used = document.createElement("div");
+					used.className = "bib_usage";
+					used.textContent = `cited in: ${usage[entry.id].join(", ")}`;
+					div.appendChild(used);
+				}
+
+				container.appendChild(div);
+			});
+		};
+
+		self.addPage("bibliography", page);
+	})();
+
 }
 
 function ModalIframe(config){

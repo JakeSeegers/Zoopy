@@ -172,7 +172,7 @@ injectProperty("node", "sources",{
     sideBar:{
         index: 21,
         label: "Sources :",
-        textarea: true,
+        sourcePicker: true,
     }
 });
 injectProperty("node", "sourceDescription",{

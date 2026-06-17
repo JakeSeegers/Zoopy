@@ -475,6 +475,117 @@ function ComponentHTML(config){
 
 }
 
+function ComponentSourcePicker(config){
+
+	const self = this;
+	Component.apply(self);
+
+	self.dom = document.createElement("div");
+	self.dom.className = "source_picker";
+
+	const label = _createLabel(config.label);
+	self.dom.appendChild(label);
+
+	const tagsArea = document.createElement("div");
+	tagsArea.className = "source_picker_tags";
+	self.dom.appendChild(tagsArea);
+
+	const searchInput = document.createElement("input");
+	searchInput.className = "source_picker_search component_input";
+	searchInput.placeholder = "Search bibliography…";
+	self.dom.appendChild(searchInput);
+
+	const resultsList = document.createElement("div");
+	resultsList.className = "source_picker_results";
+	self.dom.appendChild(resultsList);
+
+	function getSelected(){
+		const raw = self.getValue();
+		if(!raw) return [];
+		try { return JSON.parse(raw); } catch(e){ return []; }
+	}
+
+	function setSelected(arr){
+		self.setValue(arr.length ? JSON.stringify(arr) : "");
+		render();
+	}
+
+	function formatEntry(entry){
+		const authors = (entry.author||[]).map(a=>a.family||a.literal||"").filter(Boolean).join(", ");
+		const year = entry.issued && entry.issued["date-parts"] ? entry.issued["date-parts"][0][0] : "";
+		const title = entry.title || entry.id;
+		return `${authors}${year?" ("+year+")":""} — ${title}`;
+	}
+
+	function shortLabel(entry){
+		const a = entry.author && entry.author[0];
+		const family = a ? (a.family || a.literal || "") : "";
+		const year = entry.issued && entry.issued["date-parts"] ? entry.issued["date-parts"][0][0] : "";
+		return family ? `${family}${year?" "+year:""}` : (entry.id || "?");
+	}
+
+	function renderResults(query, selected){
+		resultsList.innerHTML = "";
+		const bib = loopy.bibliography || [];
+		if(bib.length === 0){
+			const msg = document.createElement("div");
+			msg.className = "source_picker_empty";
+			msg.textContent = "No bibliography loaded — import a CSL-JSON file from the main panel.";
+			resultsList.appendChild(msg);
+			return;
+		}
+		const q = query.toLowerCase();
+		const filtered = bib.filter(e => !q || formatEntry(e).toLowerCase().includes(q)).slice(0,12);
+		if(filtered.length === 0){
+			const msg = document.createElement("div");
+			msg.className = "source_picker_empty";
+			msg.textContent = "No matches.";
+			resultsList.appendChild(msg);
+			return;
+		}
+		filtered.forEach(entry => {
+			const item = document.createElement("div");
+			item.className = "source_picker_item" + (selected.includes(entry.id) ? " selected" : "");
+			item.textContent = formatEntry(entry);
+			item.onclick = () => {
+				const cur = getSelected();
+				setSelected(cur.includes(entry.id) ? cur.filter(s=>s!==entry.id) : [...cur, entry.id]);
+			};
+			resultsList.appendChild(item);
+		});
+	}
+
+	function render(){
+		const selected = getSelected();
+		const bib = loopy.bibliography || [];
+
+		tagsArea.innerHTML = "";
+		selected.forEach(id => {
+			const entry = bib.find(e=>e.id===id);
+			const tag = document.createElement("span");
+			tag.className = "source_picker_tag";
+			tag.textContent = entry ? shortLabel(entry) : id;
+			const rm = document.createElement("span");
+			rm.className = "source_picker_tag_remove";
+			rm.textContent = "×";
+			rm.onclick = () => setSelected(getSelected().filter(s=>s!==id));
+			tag.appendChild(rm);
+			tagsArea.appendChild(tag);
+		});
+
+		renderResults(searchInput.value, selected);
+	}
+
+	searchInput.oninput = () => renderResults(searchInput.value, getSelected());
+	subscribe("bibliography/changed", () => render());
+
+	self.show = function(){
+		updateDocLink(self);
+		render();
+	};
+
+}
+
 function ComponentOutput(config){
 
 	// Inherit

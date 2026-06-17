@@ -291,6 +291,11 @@ function Model(loopy){
 		if(mergeWithCurrent) newModel = bumpIdsToAvoidMergeCollision(newModel);
 		else self.clear();
 
+		if(newModel.bibliography) {
+			loopy.bibliography = newModel.bibliography;
+			publish("bibliography/changed");
+		}
+
 		for(let key in newModel.globals)loopy[key] = newModel.globals[key];
 		if(loopy.embed) loopy.embedded = 1;
 		applyInitialPropEffects(loopy);

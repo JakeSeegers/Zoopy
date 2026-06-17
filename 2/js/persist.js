@@ -268,13 +268,14 @@ function deserializeFromLegacyJson (dataString){
 }
 function serializeToHumanReadableJson(embed){
     const json = {
+        bibliography: loopy.bibliography || [],
         globals:humanReadableJsonPersistProps(loopy),
         nodes:loopy.model.nodes.map(n=>humanReadableJsonPersistProps(n)),
         edges:loopy.model.edges.map(n=>humanReadableJsonPersistProps(n)),
         labels:loopy.model.labels.map(n=>humanReadableJsonPersistProps(n))
     };
     if(embed) json.globals.embed=true;
-    return JSON.stringify(json);
+    return JSON.stringify(json, null, 2);
 }
 function deserializeFromHumanReadableJson (dataString){
     return JSON.parse(dataString);

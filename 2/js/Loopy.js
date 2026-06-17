@@ -35,6 +35,9 @@ function Loopy(config){
 	// Mouse
 	Mouse.init(document.getElementById("canvasses")); // TODO: ugly fix, ew
 
+	// Bibliography (CSL-JSON entries)
+	self.bibliography = [];
+
 	// Model
 	self.model = new Model(self);
 
@@ -150,8 +153,8 @@ function Loopy(config){
 
 	subscribe("export/file", function(){
 		const element = document.createElement('a');
-		element.setAttribute('href', 'data:application/octet-stream;base64,' + binToB64(serializeToBinary()));
-		element.setAttribute('download', "system_model.loopy");
+		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(serializeToHumanReadableJson()));
+		element.setAttribute('download', "system_model.zoopy.json");
 
 		element.style.display = 'none';
 		document.body.appendChild(element);
@@ -159,6 +162,29 @@ function Loopy(config){
 		element.click();
 
 		document.body.removeChild(element);
+	});
+
+	subscribe("load/bibliography", function(){
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.accept = '.json';
+		input.onchange = e => {
+			const file = e.target.files[0];
+			const reader = new FileReader();
+			reader.readAsText(file);
+			reader.onload = readerEvent => {
+				try {
+					const entries = JSON.parse(readerEvent.target.result);
+					if(!Array.isArray(entries)) throw new Error("Expected a CSL-JSON array");
+					loopy.bibliography = entries;
+					publish("bibliography/changed");
+					publish("model/changed");
+				} catch(err) {
+					alert("Could not read bibliography: " + err.message + "\nMake sure you export as CSL-JSON from Zotero.");
+				}
+			};
+		};
+		input.click();
 	});
 	subscribe("export/json", function(){
 		const element = document.createElement('a');

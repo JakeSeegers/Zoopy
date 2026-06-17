@@ -78,6 +78,7 @@ function injectPropsInSideBar(page,typeIndex){
         componentConfig.bg = feat.name;
         if(feat.options) page.addComponent(feat.name, new ComponentSlider(componentConfig));
         else if(feat.html) page.addComponent(feat.name, new ComponentHTML(componentConfig));
+        else if(feat.sourcePicker) page.addComponent(feat.name, new ComponentSourcePicker(componentConfig));
         else page.addComponent(feat.name, new ComponentInput(componentConfig));
     }
 }

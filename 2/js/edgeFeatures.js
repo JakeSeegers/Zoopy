@@ -133,7 +133,7 @@ injectProperty("edge", "sources",{
     sideBar:{
         index: 21,
         label: "Sources :",
-        textarea: true,
+        sourcePicker: true,
     }
 });
 injectProperty("edge", "sourceDescription",{

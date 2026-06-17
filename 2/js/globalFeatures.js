@@ -65,8 +65,14 @@ injectProperty("loopy", "afterAll",{
         <br>
         <span class='mini_button' onclick='publish("modal",["embed"])' title="embed in a blog or website">embed</span>
         <br>
+        <hr/>
+        <span class='mini_button' onclick='publish("load/bibliography")'>import bibliography (CSL-JSON)</span>
+        <br>
+        <br><span class='mini_button' onclick='publish("modal",["bibliography"])'>view bibliography</span>
+        <br>
         <div class="adv">
-            <br><span class='mini_button' onclick='publish("export/json")'>json export</span>
+            <hr/>
+            <span class='mini_button' onclick='publish("export/json")'>json export</span>
                 <span class='mini_button' onclick='publish("modal",["urlRemoteFile"])'>load from url</span>
             <br>
             <br><span class='mini_button' onclick='publish("import/file")'>import extra file</span>
