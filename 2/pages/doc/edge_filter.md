@@ -1,0 +1,1 @@
+Filters which types of signals can pass through this arrow. "Any signal" lets everything through. Other options restrict flow to only specific signal types — e.g., only death signals, only life signals, or randomly some signals (for stochastic models).

@@ -1,0 +1,1 @@
+The starting fill level when the simulation resets. "Empty" means the concept begins at zero. "Full" means it starts at maximum capacity. Use this to set initial conditions — e.g., start "Burnout" empty and "Motivation" full.

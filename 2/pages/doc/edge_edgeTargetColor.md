@@ -1,0 +1,1 @@
+In Color Logic mode, controls the color of the signal as it arrives at the target. Options include keeping the source color, converting to a specific color, rainbow, or matching the target node's color.

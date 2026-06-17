@@ -1,0 +1,1 @@
+Advanced control over how the signal's sign (positive/negative) is handled as it passes through this arrow. "Preserved" passes the sign unchanged. "Inverted" flips it. The remaining options clamp or convert the signal to only positive or only negative values.

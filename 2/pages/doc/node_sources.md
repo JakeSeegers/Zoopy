@@ -1,0 +1,1 @@
+Link this node to entries from your imported bibliography. Click a result to tag it; tagged sources appear as chips. Multiple sources can be attached. Helps trace which concepts are grounded in specific literature.

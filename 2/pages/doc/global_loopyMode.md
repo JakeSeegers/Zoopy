@@ -1,0 +1,1 @@
+Switches between Simple and Advanced mode. Simple mode hides more complex controls (like color logic and quantitative signal options) to keep the interface clean. Advanced mode reveals all simulation parameters. You can switch at any time without losing data.

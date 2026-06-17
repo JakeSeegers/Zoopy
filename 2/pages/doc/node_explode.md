@@ -1,0 +1,1 @@
+Whether the node "explodes" (is removed) when it hits a threshold. "Never" disables this. "If empty" removes the node when it drains to zero. "If full" removes it when it hits capacity. "If empty or full" removes it at either extreme.

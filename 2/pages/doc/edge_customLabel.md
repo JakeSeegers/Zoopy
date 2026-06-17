@@ -1,0 +1,1 @@
+An optional name displayed along the arrow. Leave blank to show no label. Useful for naming the relationship — e.g., "amplifies", "triggers", "reduces". You can also shift+click a bibliography citation in the sidebar to place it here automatically.

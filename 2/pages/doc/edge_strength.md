@@ -1,0 +1,1 @@
+Whether this arrow transmits the same effect (positive relationship) or inverts it (negative relationship). A positive relationship means "more A → more B". A negative relationship means "more A → less B".

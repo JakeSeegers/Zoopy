@@ -1,0 +1,1 @@
+When enabled, the color of nodes and signals carries meaning in simulations — colored signals can be filtered, blocked, or converted by arrows. When disabled (the default), color is purely aesthetic for organizing your diagram.

@@ -1,0 +1,1 @@
+How long (in seconds of simulation time) the node waits before passing on accumulated signals. A latency of 0 means immediate propagation. Higher values create delays — useful for modeling slow-developing effects like policy change or habit formation.

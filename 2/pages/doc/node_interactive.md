@@ -1,0 +1,1 @@
+Whether the user can directly influence this node during playback. "Read-only" means only arrows affect it. "+/−" lets the viewer click to add or remove signal. The "read-only when dead" variants lock the node once it empties, preventing interaction on collapsed concepts.

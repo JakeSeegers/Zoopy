@@ -1,0 +1,1 @@
+An optional URL. When set, the label becomes clickable in play mode — clicking it opens the URL in a new tab. Use this to link a label to a source, resource, or related page. You can also shift+click a URL in the bibliography sidebar to automatically create a 🌐 label with this field set.

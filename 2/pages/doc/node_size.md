@@ -1,0 +1,1 @@
+Controls the node's storage capacity — how much signal it can hold. Tiny (0.0001×) nodes are effectively boolean (on/off). Normal is the default. Big (5×) and Huge (100×) nodes absorb more before triggering overflow or underflow effects.

@@ -1,0 +1,1 @@
+In Color Logic mode, controls what happens when a signal of a different color arrives at this node. "Drop" discards foreign-colored signals. "Forward" passes them through unchanged. Only relevant when Color Logic is enabled in global settings.

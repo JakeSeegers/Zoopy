@@ -1,0 +1,1 @@
+Controls how the signal value is interpreted. "Input as tendency" nudges the target gradually. "Input as quantity" transfers a direct amount. "Output as vital change" makes the arrow drive the target's life/death state. Use for precise quantitative modeling.

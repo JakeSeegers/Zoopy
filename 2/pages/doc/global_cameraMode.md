@@ -1,0 +1,1 @@
+Controls how the canvas view behaves during playback. "Resize to scene" fits everything in view. "Follow signals" pans the camera to track active signals. "User controllable" lets the viewer pan and zoom freely.
