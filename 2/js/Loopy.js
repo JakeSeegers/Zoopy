@@ -151,6 +151,47 @@ function Loopy(config){
 		if(!self.embedded) self.dirty = true;
 	});
 
+	/////////////////
+	// UNDO HISTORY /
+	/////////////////
+
+	const _undoHistory = [];
+	const _MAX_UNDO = 50;
+	let _undoTimer = null;
+	let _undoRestoring = false;
+	let _undoInitialized = false;
+
+	subscribe("model/changed", function(){
+		if(self.mode === Loopy.MODE_PLAY) return;
+		if(_undoRestoring) return;
+
+		if(!_undoInitialized){
+			// Capture initial state immediately so we can undo back to it
+			_undoInitialized = true;
+			_undoHistory.push(serializeToHumanReadableJson(false));
+			return;
+		}
+
+		clearTimeout(_undoTimer);
+		_undoTimer = setTimeout(function(){
+			const snap = serializeToHumanReadableJson(false);
+			if(snap !== _undoHistory[_undoHistory.length - 1]){
+				_undoHistory.push(snap);
+				if(_undoHistory.length > _MAX_UNDO) _undoHistory.shift();
+			}
+		}, 500);
+	});
+
+	self.undo = function(){
+		if(_undoHistory.length < 2) return;
+		clearTimeout(_undoTimer);
+		_undoHistory.pop(); // discard current state
+		const prev = _undoHistory[_undoHistory.length - 1];
+		_undoRestoring = true;
+		self.model.importModel(deserializeFromHumanReadableJson(prev));
+		setTimeout(function(){ _undoRestoring = false; }, 150);
+	};
+
 	subscribe("export/file", function(){
 		const element = document.createElement('a');
 		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(serializeToHumanReadableJson()));

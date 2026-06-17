@@ -393,6 +393,13 @@ function Sidebar(loopy){
 		}
 	});
 
+	// Ctrl-Z to UNDO
+	subscribe("key/undo",function(){
+		if(Key.control){ // Ctrl-Z or ⌘-Z
+			loopy.undo();
+		}
+	});
+
 }
 function backToTopButton(sidebar, page){
 	page.addComponent(new ComponentButton({

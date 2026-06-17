@@ -58,6 +58,7 @@ injectProperty("loopy", "afterAll",{
     sideBar:{
         index: 99,
         html: `<hr/>
+        <span class='mini_button' onclick='loopy.undo()' title="Ctrl-Z">undo (Ctrl-Z)</span>
         <span class='mini_button' onclick='publish("modal",["save_link"])' title="Ctrl-S">save as link (Ctrl-S)</span>
         <br>
         <br><span class='mini_button' onclick='publish("export/file")'>save as file</span>
