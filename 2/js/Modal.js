@@ -180,14 +180,20 @@ function Modal(loopy){
 			output.output(link);
 			output.dom.select();
 
-			// Chars left
-			let html = link.length+" / 2048 characters";
-			if(link.length>2048){
-				html += " - MAY BE TOO LONG FOR MOST BROWSERS";
+			// Size info
+			const bib = loopy.bibliography || [];
+			let html = link.length.toLocaleString() + " characters";
+			if(bib.length > 0){
+				html += ` · bibliography (${bib.length} refs) included — abstracts & entry notes not in link`;
+			}
+			const TOO_LONG = 50000;
+			if(link.length > TOO_LONG){
+				html += " — URL may be too long to share via some services; use Save as File instead";
 			}
 			chars.innerHTML = html;
-			chars.style.fontWeight = (link.length>2048) ? "bold" : "100";
-			chars.style.fontSize = (link.length>2048) ? "14px" : "15px";
+			chars.style.fontWeight = (link.length > TOO_LONG) ? "bold" : "100";
+			chars.style.fontSize = "13px";
+			chars.style.color = (link.length > TOO_LONG) ? "#c00" : "#888";
 
 		};
 

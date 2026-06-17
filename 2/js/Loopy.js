@@ -223,6 +223,27 @@ function Loopy(config){
 		const base = window.location.origin + window.location.pathname;
 		let historyLink = base+"?"+uri;
 
+		// Append compact bibliography (citation-essential fields only, no abstracts)
+		const bib = self.bibliography || [];
+		if(bib.length > 0){
+			const KEEP = ["id","author","issued","title","container-title","DOI","URL","volume","issue","page","publisher","type"];
+			const compact = bib.map(e => {
+				const out = {};
+				KEEP.forEach(k => { if(e[k] !== undefined) out[k] = e[k]; });
+				// Strip author to family+given only
+				if(out.author) out.author = out.author.map(a => {
+					const stripped = {};
+					if(a.family) stripped.family = a.family;
+					if(a.given)  stripped.given  = a.given;
+					if(a.literal) stripped.literal = a.literal;
+					return stripped;
+				});
+				return out;
+			});
+			const bibParam = btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
+			historyLink += "&bib=" + bibParam.replace(/\+/g,"_").replace(/\//g,"-").replace(/=/g,".");
+		}
+
 		// NO LONGER DIRTY!
 		self.dirty = false;
 
@@ -246,10 +267,25 @@ function Loopy(config){
 			fetch(remoteDataUrl).then(r=>r.arrayBuffer()).then(aB=>loopy.model.importModel(deserializeFromArrayBuffer(aB)));
 		} else {
 			let data = _getParameterByName("data");
-			if(!data) data=location.href.split("?")[1];
-			if(!data) data=location.href.split("#")[1];
+			if(!data){
+				// Strip &bib=... before passing to diagram deserializer
+				const full = location.href.split("?")[1] || location.href.split("#")[1];
+				if(full) data = full.split("&bib=")[0];
+			}
 			if(!data) data=decodeURIComponent(_blankData);
 			loopy.model.importModel(deserializeFromUrl(data));
+		}
+		// Restore compact bibliography from &bib= param if present
+		const bibParam = _getParameterByName("bib");
+		if(bibParam){
+			try{
+				const normalized = bibParam.replace(/_/g,"+").replace(/-/g,"/").replace(/\./g,"=");
+				const entries = JSON.parse(decodeURIComponent(escape(atob(normalized))));
+				if(Array.isArray(entries) && entries.length > 0){
+					self.bibliography = entries;
+					publish("bibliography/changed");
+				}
+			} catch(e){ console.warn("Could not restore bibliography from URL:", e); }
 		}
 	};
 
