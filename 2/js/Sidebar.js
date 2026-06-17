@@ -181,21 +181,13 @@ function Sidebar(loopy){
 			return citation;
 		}
 
-		// ── pending placement indicator ──────────────────────────────
-		const pendingBar = document.createElement("div");
-		pendingBar.className = "bib_pending_bar";
-		pendingBar.style.display = "none";
-		pendingBar.innerHTML = "⬡ Shift+click an arrow to place citation &nbsp;<span class='bib_pending_cancel'>✕ cancel</span>";
-		pendingBar.querySelector(".bib_pending_cancel").onclick = () => {
-			loopy.pendingEdgeLabel = null;
-			publish("pending_edge_label/cleared");
-		};
-		page.dom.insertBefore(pendingBar, container);
-		subscribe("pending_edge_label/cleared", () => { pendingBar.style.display = "none"; });
-
-		function activatePending(text){
-			loopy.pendingEdgeLabel = text;
-			pendingBar.style.display = "block";
+		function createCanvasLabel(text, href){
+			const canvasses = document.getElementById("canvasses");
+			const screenCX = canvasses.clientWidth  / 2;
+			const screenCY = canvasses.clientHeight / 2;
+			const pos = mouseToMouse(screenCX, screenCY, loopy.offsetScale, loopy.offsetX, loopy.offsetY);
+			const label = loopy.model.addLabel({x: pos.x, y: pos.y, text: text, hue: 0, visibility: 1});
+			if(href) label.href = href;
 		}
 
 		// ── section builder ──────────────────────────────────────────
@@ -206,16 +198,18 @@ function Sidebar(loopy){
 			const hdr = document.createElement("div");
 			hdr.className = "bib_section_hdr";
 			hdr.textContent = label;
-			if(opts.shiftable){
+			if(opts.shiftable || opts.isLink){
 				const hint = document.createElement("span");
 				hint.className = "bib_shift_hint";
-				hint.textContent = " shift+click → place on arrow";
+				hint.textContent = opts.isLink ? " shift+click → place 🌐 on canvas" : " shift+click → place on canvas";
 				hdr.appendChild(hint);
-				hdr.title = "Shift+click to place this text on an arrow";
-				hdr.onclick = e => {
-					if(e.shiftKey){ activatePending(content); }
-				};
+				hdr.title = opts.isLink ? "Shift+click to place a web link label on the canvas" : "Shift+click to place this text on the canvas";
 				hdr.classList.add("bib_section_shiftable");
+				if(opts.isLink){
+					hdr.onclick = e => { if(e.shiftKey) createCanvasLabel("🌐", content); };
+				} else {
+					hdr.onclick = e => { if(e.shiftKey) createCanvasLabel(content); };
+				}
 			}
 			wrap.appendChild(hdr);
 
@@ -224,9 +218,8 @@ function Sidebar(loopy){
 				ta.className = "bib_section_textarea";
 				ta.value = content;
 				ta.oninput = () => opts.onchange && opts.onchange(ta.value);
-				// shift+click textarea header should use the textarea's current value
 				if(opts.shiftable){
-					hdr.onclick = e => { if(e.shiftKey) activatePending(ta.value); };
+					hdr.onclick = e => { if(e.shiftKey) createCanvasLabel(ta.value); };
 				}
 				wrap.appendChild(ta);
 			} else {
