@@ -577,7 +577,7 @@ function ComponentSourcePicker(config){
 	}
 
 	searchInput.oninput = () => renderResults(searchInput.value, getSelected());
-	subscribe("bibliography/changed", () => render());
+	subscribe("bibliography/changed", () => { if(self.page.target) render(); });
 
 	self.show = function(){
 		updateDocLink(self);
