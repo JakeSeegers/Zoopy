@@ -148,6 +148,49 @@ function Model(loopy){
 
 	};
 
+	// Push overlapping text blurbs apart so they don't stack unreadably.
+	// Iterative pairwise separation along the axis of least overlap. Only
+	// label positions move; leader-line targets (arrowX/arrowY) are left
+	// alone so a nudged blurb keeps pointing at its zone.
+	self.spreadLabels = function(){
+		const labels = self.labels;
+		if(labels.length < 2) return;
+
+		// measureText needs the label font active.
+		self.context.font = "100 "+Label.FONTSIZE+"px sans-serif";
+
+		const PAD = 12;        // breathing room between boxes
+		const MAX_ITER = 80;
+		for(let iter=0; iter<MAX_ITER; iter++){
+			let moved = false;
+			for(let i=0; i<labels.length; i++){
+				for(let j=i+1; j<labels.length; j++){
+					const a = labels[i].getBoundingBox();
+					const b = labels[j].getBoundingBox();
+					const overlapX = Math.min(a.right,b.right) - Math.max(a.left,b.left) + PAD;
+					const overlapY = Math.min(a.bottom,b.bottom) - Math.max(a.top,b.top) + PAD;
+					if(overlapX<=0 || overlapY<=0) continue; // no collision
+
+					moved = true;
+					const acx=(a.left+a.right)/2, acy=(a.top+a.bottom)/2;
+					const bcx=(b.left+b.right)/2, bcy=(b.top+b.bottom)/2;
+					if(overlapX < overlapY){
+						const push = overlapX/2;
+						const dir = (acx<=bcx) ? 1 : -1;
+						labels[i].x -= dir*push;
+						labels[j].x += dir*push;
+					}else{
+						const push = overlapY/2;
+						const dir = (acy<=bcy) ? 1 : -1;
+						labels[i].y -= dir*push;
+						labels[j].y += dir*push;
+					}
+				}
+			}
+			if(!moved) break;
+		}
+	};
+
 
 
 
@@ -270,10 +313,12 @@ function Model(loopy){
 		ctx.save();
 		applyZoomTransform(ctx);
 
-		// Draw labels THEN edges THEN nodes
-		for(let i=0;i<self.labels.length;i++) self.labels[i].draw(ctx);
+		// Draw edges THEN nodes THEN labels.
+		// Labels (free-text blurbs) render LAST so their text sits on the
+		// front layer, on top of nodes and edges, and stays readable.
 		for(let i=0;i<self.edges.length;i++) self.edges[i].draw(ctx);
 		for(let i=0;i<self.nodes.length;i++) self.nodes[i].draw(ctx);
+		for(let i=0;i<self.labels.length;i++) self.labels[i].draw(ctx);
 
 		// Restore
 		ctx.restore();
@@ -308,6 +353,13 @@ function Model(loopy){
 		newModel.edges.forEach((n)=>self.addEdge(n));
 		newModel.labels.forEach((n)=>self.addLabel(n));
 		//newModel.groups.forEach((n,i)=>self.addGroup(n));
+
+		// Nudge overlapping text blurbs apart so nothing is stacked
+		// unreadably on import. Leader-line targets (arrowX/arrowY) are left
+		// untouched, so a blurb that gets pushed aside keeps pointing at its
+		// original zone.
+		self.spreadLabels();
+
 		setTimeout(()=>{
 			const need = self.getBounds();
 			const available = document.getElementById("canvasses");
