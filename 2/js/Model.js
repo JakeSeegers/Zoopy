@@ -422,6 +422,19 @@ function Model(loopy){
 		if(self.loopy.mode!==Loopy.MODE_EDIT) return;
 		if(self.loopy.tool===Loopy.TOOL_ERASE) return;
 
+		// Placing a leader-line target? The next click sets the blurb's arrow
+		// to wherever you clicked, then we drop back to normal.
+		if(loopy.pendingLeaderTarget != null){
+			const lbl = loopy.pendingLeaderTarget;
+			lbl.leader = 1;
+			lbl.arrowX = Math.round(Mouse.x);
+			lbl.arrowY = Math.round(Mouse.y);
+			loopy.pendingLeaderTarget = null;
+			publish("model/changed");
+			publish("leader_target/set");
+			return;
+		}
+
 		// Shift+click while a citation/note is pending → place it on the nearest edge
 		if(Mouse.shift && loopy.pendingEdgeLabel != null){
 			// Try label area first, then fall back to nearest edge midpoint
