@@ -56,6 +56,30 @@ function Label(model, config){
 			ctx.restore();
 		}
 
+		// LEADER LINE: connect a parked blurb back to the zone it describes.
+		// Drawn before the text so the text always sits on top of its own line.
+		if(self.leader){
+			const bounds = self.getBounds();
+			// Nearest point on the label box toward the target, so the line
+			// meets the blurb's edge instead of stabbing through the text.
+			const start = _closestPointOnBox(self.arrowX, self.arrowY, bounds);
+			ctx.save();
+			ctx.scale(2,2); // RETINA (bounds & target are in model space)
+			ctx.beginPath();
+			ctx.moveTo(start.x, start.y);
+			ctx.lineTo(self.arrowX, self.arrowY);
+			ctx.strokeStyle = Label.COLORS[self.textColor];
+			ctx.globalAlpha = 0.45;
+			ctx.lineWidth = 1.5;
+			ctx.stroke();
+			// Little dot pinning the target zone.
+			ctx.beginPath();
+			ctx.arc(self.arrowX, self.arrowY, 4, 0, Math.PI*2);
+			ctx.fillStyle = Label.COLORS[self.textColor];
+			ctx.fill();
+			ctx.restore();
+		}
+
 		// Translate!
 		ctx.save();
 		ctx.translate(x,y);
@@ -159,4 +183,14 @@ function Label(model, config){
 		};
 	};
 
+}
+
+// Nearest point on a label's box {x,y,width,height} to an external target.
+function _closestPointOnBox(tx, ty, box){
+	const left = box.x, right = box.x+box.width;
+	const top = box.y, bottom = box.y+box.height;
+	return {
+		x: Math.max(left, Math.min(tx, right)),
+		y: Math.max(top,  Math.min(ty, bottom))
+	};
 }

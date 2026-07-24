@@ -266,13 +266,49 @@ function deserializeFromLegacyJson (dataString){
     legacyIdFix(newModel);
     return newModel;
 }
+// Machine-and-AI-readable spec baked into every JSON export. Zoopy ignores
+// keys it doesn't recognise on import (see Model.importModel), so this rides
+// along harmlessly and tells an AI exactly how to author a valid file.
+const ZOOPY_FORMAT_GUIDE = {
+    "_comment": "This is a Zoopy (Loopy v2 fork) system-model file. Hand this whole file to an AI and it can edit or generate a valid one. Delete this _format block or leave it — Zoopy ignores it on import.",
+    "topLevel": "Object with keys: bibliography (CSL-JSON array, Zoopy-only, optional), globals (object), nodes (array), edges (array), labels (array).",
+    "nodes": {
+        "required": ["id (0-based int, must equal array index)", "x (int px)", "y (int px)"],
+        "label": "display name, default '?'",
+        "hue": "0=red 1=orange 2=yellow 3=green 4=blue 5=purple",
+        "size": "0.0001 | 1 | 5 | 100",
+        "init": "-1(dead) | 0 | 0.25 | 0.5 | 0.75 | 1 starting fill",
+        "notes/sources/sourceDescription": "Zoopy-only free text / JSON-array-string of CSL ids / citation string"
+    },
+    "edges": {
+        "required": ["from (node id)", "to (node id)"],
+        "arc": "curve amount, set explicitly (100 is a sane default); vary for parallel edges",
+        "strength": "1=reinforcing, -1=balancing",
+        "customLabel": "overrides the auto +/- glyph; use \\n for multi-line"
+    },
+    "labels": {
+        "desc": "Free-floating canvas text (blurbs). Rendered on the FRONT layer, on top of nodes and edges.",
+        "required": ["x (int px)", "y (int px)"],
+        "text": "supports \\n and inline <b>/<i>",
+        "textColor": "-1=default else hue 0-5",
+        "leaderLines": "To park a blurb off to the side and point it at a zone, set leader:1 and arrowX/arrowY to the target point (same coord space as x/y). Zoopy draws a thin connector from the blurb to that point. Great when many blurbs cluster on one area — spread the blurbs out and aim each arrow at its zone.",
+        "leader": "0=no connector (default), 1=draw connector to arrowX/arrowY",
+        "arrowX/arrowY": "int px, the zone/point the blurb points at (only used when leader:1)"
+    },
+    "importBehavior": "On import Zoopy draws label text on the front layer and automatically nudges overlapping blurbs apart (leader arrow targets are preserved, so a nudged blurb keeps pointing at its zone). Node id must match array index."
+};
+
 function serializeToHumanReadableJson(embed){
     const json = {
         bibliography: loopy.bibliography || [],
         globals:humanReadableJsonPersistProps(loopy),
         nodes:loopy.model.nodes.map(n=>humanReadableJsonPersistProps(n)),
         edges:loopy.model.edges.map(n=>humanReadableJsonPersistProps(n)),
-        labels:loopy.model.labels.map(n=>humanReadableJsonPersistProps(n))
+        labels:loopy.model.labels.map(n=>humanReadableJsonPersistProps(n)),
+        // Kept LAST so `bibliography` stays the first key (matches Zoopy's
+        // export order and the loopy-v2-diagram skill's "bibliography first"
+        // validation). Zoopy ignores unknown keys on import.
+        _format: ZOOPY_FORMAT_GUIDE
     };
     if(embed) json.globals.embed=true;
     return JSON.stringify(json, null, 2);

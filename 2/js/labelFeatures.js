@@ -48,3 +48,20 @@ injectProperty("label", "href",{
         advanced: true
     }
 });
+// --- Leader line (Zoopy only) ---------------------------------------------
+// A blurb can be parked off to the side and point back to the zone it
+// describes with a thin connector line. Set `leader` to 1 and give the target
+// point in the same coordinate space as x/y via arrowX/arrowY.
+// Persisted JSON-only so binary/URL sharing is unaffected (see persist.js).
+injectProperty("label", "leader",{
+    defaultValue:0,
+    persist:{index:6, jsonOnly:true}
+});
+injectProperty("label", "arrowX",{
+    defaultValue:0,
+    persist:{index:7, jsonOnly:true, serializeFunc:v=>Math.round(v)}
+});
+injectProperty("label", "arrowY",{
+    defaultValue:0,
+    persist:{index:8, jsonOnly:true, serializeFunc:v=>Math.round(v)}
+});

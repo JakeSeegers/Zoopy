@@ -148,6 +148,242 @@ function Model(loopy){
 
 	};
 
+	// Box helpers shared by the layout code. Overlap of two
+	// {left,top,right,bottom} boxes grown by `pad`, or null when clear.
+	const _boxOverlap = (a,b,pad)=>{
+		const ox = Math.min(a.right,b.right) - Math.max(a.left,b.left) + pad;
+		const oy = Math.min(a.bottom,b.bottom) - Math.max(a.top,b.top) + pad;
+		return (ox>0 && oy>0) ? {ox,oy} : null;
+	};
+	const _bcx = box => (box.left+box.right)/2;
+	const _bcy = box => (box.top+box.bottom)/2;
+
+	// Approximate on-canvas box of an edge's label (the +/− glyph or the
+	// customLabel citation). labelX/labelY are set by Edge.update at the arc
+	// midpoint; the edge font is 60px retina ≈ 30px in model space.
+	self.edgeLabelBox = function(edge){
+		if(!edge.label) return null;
+		const ctx = self.context;
+		ctx.font = "30px sans-serif";
+		const lines = String(edge.label).split("\n");
+		let wmax = 0;
+		for(const t of lines){ const w = ctx.measureText(t).width; if(w>wmax) wmax=w; }
+		const halfW = wmax/2 + 8;
+		const halfH = (lines.length*34)/2;
+		return {left:edge.labelX-halfW, right:edge.labelX+halfW,
+		        top:edge.labelY-halfH, bottom:edge.labelY+halfH};
+	};
+
+	// Declutter the whole diagram on import.
+	//
+	// Phase 1 — UNIFORM EXPANSION (systems-safe). Node names and edge/arrow
+	// labels are fixed pixel sizes pinned to the geometry, so the only way to
+	// give them room without distorting the model is to scale the whole figure.
+	// Scaling every node position AND every arc by the same factor about the
+	// centroid is a *similar figure*: each edge's length — and therefore its
+	// signal-traversal time (signalSpeed = speed / arrowLength) — scales by the
+	// same factor, so all RELATIVE dynamics are preserved exactly (only a global
+	// tempo change, which the auto-fit camera hides). We pick the smallest
+	// factor that clears the crowding.
+	//
+	// Phase 2 — FREE-LABEL RELAXATION. Free blurbs then resist each other and
+	// the (now roomier) node + edge-label boxes, held near home by a weak
+	// spring. Only label positions move here; the topology never changes.
+	self.autoLayout = function(){
+
+		const labels = self.labels;
+		self.context.font = "100 "+Label.FONTSIZE+"px sans-serif";
+
+		// ---- Phase 1: uniform expansion ------------------------------------
+		if(self.nodes.length >= 2){
+			let cx=0, cy=0;
+			self.nodes.forEach(n=>{ cx+=n.x; cy+=n.y; });
+			cx/=self.nodes.length; cy/=self.nodes.length;
+
+			// Anchor boxes (node circles + edge labels) as centre-offset + size.
+			const anchors = [];
+			self.nodes.forEach(n=>{ const b=n.getBoundingBox();
+				anchors.push({bx:_bcx(b), by:_bcy(b), hw:(b.right-b.left)/2, hh:(b.bottom-b.top)/2}); });
+			self.edges.forEach(e=>{ const b=self.edgeLabelBox(e); if(b)
+				anchors.push({bx:e.labelX, by:e.labelY, hw:(b.right-b.left)/2, hh:(b.bottom-b.top)/2}); });
+
+			const MARGIN = 16; // demand real breathing room, not a bare miss
+			const overlapsAt = (F)=>{
+				let count=0;
+				const bx = anchors.map(a=>({
+					l:cx+F*(a.bx-cx)-a.hw-MARGIN, r:cx+F*(a.bx-cx)+a.hw+MARGIN,
+					t:cy+F*(a.by-cy)-a.hh-MARGIN, b:cy+F*(a.by-cy)+a.hh+MARGIN }));
+				for(let i=0;i<bx.length;i++) for(let j=i+1;j<bx.length;j++){
+					const A=bx[i],B=bx[j];
+					if(Math.min(A.r,B.r)>Math.max(A.l,B.l) && Math.min(A.b,B.b)>Math.max(A.t,B.t)) count++;
+				}
+				return count;
+			};
+
+			const base = overlapsAt(1);
+			if(base>0){
+				const goal = Math.floor(base*0.1); // clear ~90% of collisions
+				let F = 3.0;                        // cap the zoom-out
+				for(let f=1.1; f<=3.0001; f+=0.1){
+					if(overlapsAt(f) <= goal){ F=f; break; }
+				}
+				// Apply the similar-figure scale: nodes, arcs, and free labels
+				// (plus any leader targets, so leaders keep pointing true).
+				self.nodes.forEach(n=>{ n.x=cx+F*(n.x-cx); n.y=cy+F*(n.y-cy); });
+				self.edges.forEach(e=>{ e.arc*=F; });
+				labels.forEach(l=>{
+					l.x=cx+F*(l.x-cx); l.y=cy+F*(l.y-cy);
+					if(l.leader){ l.arrowX=Math.round(cx+F*(l.arrowX-cx)); l.arrowY=Math.round(cy+F*(l.arrowY-cy)); }
+				});
+				self.update(); // recompute edge labelX/labelY at new positions
+			}
+		}
+
+		// ---- Phase 1.5: fan out crowded edge labels via arc -----------------
+		// An arrow label can't leave its arrow, but its ONE free axis is the
+		// arc: raising |arc| slides the label out along the edge's perpendicular
+		// without moving a single node. So we let edge labels repel each other
+		// and translate that push into arc changes — clamped to [0.4, 2.5]× the
+		// original |arc| so each edge's length (and its signal timing) only
+		// shifts modestly. Self-loops keep their arc (it sets the loop size).
+		(function fanEdgeLabels(){
+			const fannable = self.edges.filter(e=>e.from!==e.to && e.label);
+			if(fannable.length < 2) return;
+			const arc0 = new Map(fannable.map(e=>[e, e.arc]));
+			const nodeBoxes = self.nodes.map(n=>n.getBoundingBox());
+			const perpOf = e=>{
+				const ang = Math.atan2(e.to.y-e.from.y, e.to.x-e.from.x) - Math.PI/2;
+				return {x:Math.cos(ang), y:Math.sin(ang)};
+			};
+			const EPAD = 26, ESTEP = 0.6, EITERS = 120;
+			for(let it=0; it<EITERS; it++){
+				const boxes = fannable.map(e=>self.edgeLabelBox(e));
+				const dArc = new Array(fannable.length).fill(0);
+				let moved = false;
+				for(let i=0; i<fannable.length; i++){
+					const pi = perpOf(fannable[i]);
+					// repel other edge labels
+					for(let j=i+1; j<fannable.length; j++){
+						const o = _boxOverlap(boxes[i],boxes[j],EPAD);
+						if(!o) continue;
+						moved = true;
+						let dx=_bcx(boxes[i])-_bcx(boxes[j]), dy=_bcy(boxes[i])-_bcy(boxes[j]);
+						if(!dx && !dy){ dx=Math.random()-0.5; dy=Math.random()-0.5; }
+						const len=Math.hypot(dx,dy)||1, mag=Math.min(o.ox,o.oy)*0.5;
+						const fvx=dx/len*mag, fvy=dy/len*mag;
+						// project each edge's share onto its own perpendicular:
+						// dLabel ≈ dArc · perpUnit, so dArc = force · perpUnit.
+						const pj=perpOf(fannable[j]);
+						dArc[i] += fvx*pi.x + fvy*pi.y;
+						dArc[j] -= fvx*pj.x + fvy*pj.y;
+					}
+					// also push the label off any node it sits on
+					for(const nb of nodeBoxes){
+						const o = _boxOverlap(boxes[i],nb,EPAD);
+						if(!o) continue;
+						moved = true;
+						let dx=_bcx(boxes[i])-_bcx(nb), dy=_bcy(boxes[i])-_bcy(nb);
+						if(!dx && !dy){ dx=Math.random()-0.5; dy=Math.random()-0.5; }
+						const len=Math.hypot(dx,dy)||1, mag=Math.min(o.ox,o.oy);
+						dArc[i] += (dx/len*mag)*pi.x + (dy/len*mag)*pi.y;
+					}
+				}
+				if(!moved) break;
+				for(let i=0; i<fannable.length; i++){
+					const e = fannable[i];
+					const a0 = arc0.get(e), sign = a0<0?-1:1;
+					const lo = Math.abs(a0)*0.3, hi = Math.abs(a0)*4.0;
+					let m = Math.abs(e.arc + dArc[i]*ESTEP);
+					e.arc = sign*Math.max(lo, Math.min(hi, m)); // keep side, bound length
+				}
+				self.update(); // refresh labelX/labelY for the next pass
+			}
+		})();
+
+		if(labels.length === 0) return;
+
+		// ---- Phase 2: free-label force relaxation --------------------------
+		const PAD = 14;      // breathing room baked into every box
+		const SPRING = 0.03; // pull back toward authored position (weak)
+		const STEP = 0.5;    // integration step
+		const ITERS = 400;
+
+		// Immovable obstacles: node circles AND edge-label boxes.
+		const obstacles = self.nodes.map(n=>n.getBoundingBox());
+		self.edges.forEach(e=>{ const b=self.edgeLabelBox(e); if(b) obstacles.push(b); });
+
+		const home = labels.map(l=>({x:l.x, y:l.y}));
+
+		for(let iter=0; iter<ITERS; iter++){
+			const fx = new Array(labels.length).fill(0);
+			const fy = new Array(labels.length).fill(0);
+
+			// label vs label (both move)
+			for(let i=0; i<labels.length; i++){
+				const a = labels[i].getBoundingBox();
+				for(let j=i+1; j<labels.length; j++){
+					const b = labels[j].getBoundingBox();
+					const o = _boxOverlap(a,b,PAD);
+					if(!o) continue;
+					let dx = _bcx(a)-_bcx(b), dy = _bcy(a)-_bcy(b);
+					if(!dx && !dy){ dx = Math.random()-0.5; dy = Math.random()-0.5; }
+					const len = Math.hypot(dx,dy)||1;
+					const mag = Math.min(o.ox,o.oy)*0.5;
+					fx[i]+=dx/len*mag; fy[i]+=dy/len*mag;
+					fx[j]-=dx/len*mag; fy[j]-=dy/len*mag;
+				}
+			}
+
+			// label vs obstacle (only the label feels it)
+			for(let i=0; i<labels.length; i++){
+				const a = labels[i].getBoundingBox();
+				for(const ob of obstacles){
+					const o = _boxOverlap(a,ob,PAD);
+					if(!o) continue;
+					let dx = _bcx(a)-_bcx(ob), dy = _bcy(a)-_bcy(ob);
+					if(!dx && !dy){ dx = Math.random()-0.5; dy = Math.random()-0.5; }
+					const len = Math.hypot(dx,dy)||1;
+					const mag = Math.min(o.ox,o.oy);
+					fx[i]+=dx/len*mag; fy[i]+=dy/len*mag;
+				}
+			}
+
+			// spring home, integrate, measure convergence
+			let maxMove = 0;
+			for(let i=0; i<labels.length; i++){
+				fx[i] += (home[i].x - labels[i].x)*SPRING;
+				fy[i] += (home[i].y - labels[i].y)*SPRING;
+				const mvx = fx[i]*STEP, mvy = fy[i]*STEP;
+				labels[i].x += mvx; labels[i].y += mvy;
+				maxMove = Math.max(maxMove, Math.abs(mvx)+Math.abs(mvy));
+			}
+			if(maxMove < 0.25) break; // settled
+		}
+
+		// Fallback: any blurb still stuck on a node gets parked clear with a
+		// leader pointing at the zone it covered (unless already aimed).
+		const nodeBoxes = self.nodes.map(n=>n.getBoundingBox());
+		const inside = (x,y,box)=> x>=box.left && x<=box.right && y>=box.top && y<=box.bottom;
+		for(const lbl of labels){
+			const collided = nodeBoxes.find(nb=>_boxOverlap(lbl.getBoundingBox(),nb,PAD));
+			if(!collided) continue;
+			const originX = lbl.x, originY = lbl.y;
+			const onNode = nodeBoxes.some(nb=>inside(originX,originY,nb));
+			let dx = originX-_bcx(collided), dy = originY-_bcy(collided);
+			if(!dx && !dy){ dx=1; dy=0; }
+			const len = Math.hypot(dx,dy)||1; dx/=len; dy/=len;
+			let guard=0;
+			while(guard++<300 && nodeBoxes.some(b=>_boxOverlap(lbl.getBoundingBox(),b,PAD))){
+				lbl.x += dx*18; lbl.y += dy*18;
+			}
+			if(!lbl.leader && onNode){
+				lbl.leader = 1;
+				lbl.arrowX = Math.round(originX);
+				lbl.arrowY = Math.round(originY);
+			}
+		}
+	};
+
 
 
 
@@ -270,10 +506,12 @@ function Model(loopy){
 		ctx.save();
 		applyZoomTransform(ctx);
 
-		// Draw labels THEN edges THEN nodes
-		for(let i=0;i<self.labels.length;i++) self.labels[i].draw(ctx);
+		// Draw edges THEN nodes THEN labels.
+		// Labels (free-text blurbs) render LAST so their text sits on the
+		// front layer, on top of nodes and edges, and stays readable.
 		for(let i=0;i<self.edges.length;i++) self.edges[i].draw(ctx);
 		for(let i=0;i<self.nodes.length;i++) self.nodes[i].draw(ctx);
+		for(let i=0;i<self.labels.length;i++) self.labels[i].draw(ctx);
 
 		// Restore
 		ctx.restore();
@@ -308,6 +546,13 @@ function Model(loopy){
 		newModel.edges.forEach((n)=>self.addEdge(n));
 		newModel.labels.forEach((n)=>self.addLabel(n));
 		//newModel.groups.forEach((n,i)=>self.addGroup(n));
+
+		// Declutter text on import: uniformly expand the whole diagram just
+		// enough to give node names and edge labels room (a similar figure, so
+		// the system's relative dynamics are preserved), then let free labels
+		// resist each other into the gaps.
+		self.autoLayout();
+
 		setTimeout(()=>{
 			const need = self.getBounds();
 			const available = document.getElementById("canvasses");
@@ -369,6 +614,19 @@ function Model(loopy){
 		// ONLY WHEN EDITING (and NOT erase)
 		if(self.loopy.mode!==Loopy.MODE_EDIT) return;
 		if(self.loopy.tool===Loopy.TOOL_ERASE) return;
+
+		// Placing a leader-line target? The next click sets the blurb's arrow
+		// to wherever you clicked, then we drop back to normal.
+		if(loopy.pendingLeaderTarget != null){
+			const lbl = loopy.pendingLeaderTarget;
+			lbl.leader = 1;
+			lbl.arrowX = Math.round(Mouse.x);
+			lbl.arrowY = Math.round(Mouse.y);
+			loopy.pendingLeaderTarget = null;
+			publish("model/changed");
+			publish("leader_target/set");
+			return;
+		}
 
 		// Shift+click while a citation/note is pending → place it on the nearest edge
 		if(Mouse.shift && loopy.pendingEdgeLabel != null){
@@ -472,6 +730,14 @@ function Model(loopy){
 		_testObjects(self.nodes);
 		_testObjects(self.edges);
 		_testObjects(self.labels);
+		// Edge bounding boxes cover the arc, not the label text — include the
+		// label extents so wide/fanned citation labels aren't clipped by the
+		// auto-fit camera.
+		for(let i=0; i<self.edges.length; i++){
+			if(self.edges[i].hide===true) continue;
+			const b = self.edgeLabelBox(self.edges[i]);
+			if(b) bounds = mergeBounds(bounds, b);
+		}
 		return bounds;
 	};
 	self.fitBounds = function(size){

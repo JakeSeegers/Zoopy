@@ -76,6 +76,7 @@ function Sidebar(loopy){
 		const page = new SidebarPage();
 		backToTopButton(self, page);
 		injectPropsInSideBar(page,objTypeToTypeIndex("label"));
+		page.addComponent("leaderLine", new ComponentLeaderLine(self));
 		page.onshow = ()=> page.getComponent("text").select(); // Focus on the text field
 		page.onhide = function(){
 			// If you'd just edited it...
@@ -723,6 +724,67 @@ function ComponentSlider(config){
 	// BG Color!
 	self.setBGColor = function(color){
 		sliderBG.style.backgroundColor = color;
+	};
+
+}
+
+// Leader-line editor for a label (Zoopy only).
+// Toggles the connector on/off and lets you aim it at a zone by clicking the
+// canvas. The blurb can then be dragged aside while its arrow keeps pointing.
+function ComponentLeaderLine(sidebar){
+
+	// Inherit
+	const self = this;
+	Component.apply(self);
+
+	self.dom = document.createElement("div");
+	self.dom.className = "not_in_play_mode";
+
+	const label = document.createElement("div");
+	label.className = "component_label";
+	label.innerHTML = "Leader line (point this blurb at a zone) :";
+	self.dom.appendChild(label);
+
+	const toggleBtn = _createButton("", function(){
+		const t = self.page.target;
+		if(!t) return;
+		t.leader = t.leader ? 0 : 1;
+		// First time on: seed a visible target just below the blurb.
+		if(t.leader && !t.arrowX && !t.arrowY){
+			t.arrowX = Math.round(t.x);
+			t.arrowY = Math.round(t.y + 120);
+		}
+		if(!t.leader && loopy.pendingLeaderTarget===t) loopy.pendingLeaderTarget = null;
+		publish("model/changed");
+		self.show();
+	});
+	self.dom.appendChild(toggleBtn);
+
+	const pickBtn = _createButton("", function(){
+		const t = self.page.target;
+		if(!t) return;
+		loopy.pendingLeaderTarget = t;
+		self.show();
+	});
+	self.dom.appendChild(pickBtn);
+
+	// When the canvas click lands the target, re-show to refresh the readout.
+	subscribe("leader_target/set", function(){
+		if(self.page.target && sidebar.currentPage === self.page) self.show();
+	});
+
+	self.show = function(){
+		const t = self.page.target;
+		if(!t) return;
+		toggleBtn.innerHTML = t.leader
+			? "◉ leader line ON — click to turn off"
+			: "○ leader line off — click to turn on";
+		pickBtn.style.display = t.leader ? "" : "none";
+		if(loopy.pendingLeaderTarget === t){
+			pickBtn.innerHTML = "now click the canvas to place the target…";
+		}else{
+			pickBtn.innerHTML = `set target → click canvas  (now ${Math.round(t.arrowX)}, ${Math.round(t.arrowY)})`;
+		}
 	};
 
 }
