@@ -300,12 +300,15 @@ const ZOOPY_FORMAT_GUIDE = {
 
 function serializeToHumanReadableJson(embed){
     const json = {
-        _format: ZOOPY_FORMAT_GUIDE,
         bibliography: loopy.bibliography || [],
         globals:humanReadableJsonPersistProps(loopy),
         nodes:loopy.model.nodes.map(n=>humanReadableJsonPersistProps(n)),
         edges:loopy.model.edges.map(n=>humanReadableJsonPersistProps(n)),
-        labels:loopy.model.labels.map(n=>humanReadableJsonPersistProps(n))
+        labels:loopy.model.labels.map(n=>humanReadableJsonPersistProps(n)),
+        // Kept LAST so `bibliography` stays the first key (matches Zoopy's
+        // export order and the loopy-v2-diagram skill's "bibliography first"
+        // validation). Zoopy ignores unknown keys on import.
+        _format: ZOOPY_FORMAT_GUIDE
     };
     if(embed) json.globals.embed=true;
     return JSON.stringify(json, null, 2);
