@@ -148,45 +148,101 @@ function Model(loopy){
 
 	};
 
-	// Push overlapping text blurbs apart so they don't stack unreadably.
-	// Iterative pairwise separation along the axis of least overlap. Only
-	// label positions move; leader-line targets (arrowX/arrowY) are left
-	// alone so a nudged blurb keeps pointing at its zone.
+	// Keep imported text blurbs readable: pull them off the nodes they land
+	// on, park crowded ones out to open space with a leader line pointing back
+	// at the zone they were covering, and separate any that still overlap each
+	// other. Only label positions change — nodes and edges are left as-is, so
+	// the diagram's relationships never shift. (Edge/arrow labels are pinned to
+	// their arrows by Loopy and can't be moved here.)
 	self.spreadLabels = function(){
 		const labels = self.labels;
-		if(labels.length < 2) return;
+		if(labels.length === 0) return;
 
 		// measureText needs the label font active.
 		self.context.font = "100 "+Label.FONTSIZE+"px sans-serif";
 
-		const PAD = 12;        // breathing room between boxes
-		const MAX_ITER = 80;
+		const PAD = 14; // breathing room between boxes
+
+		// Overlap between two {left,top,right,bottom} boxes, or null if clear.
+		const hit = (a,b)=>{
+			const ox = Math.min(a.right,b.right) - Math.max(a.left,b.left) + PAD;
+			const oy = Math.min(a.bottom,b.bottom) - Math.max(a.top,b.top) + PAD;
+			return (ox>0 && oy>0) ? {ox,oy} : null;
+		};
+
+		// Node boxes are immovable obstacles labels should not sit on top of.
+		const nodeBoxes = self.nodes.map(n=>n.getBoundingBox());
+
+		// Scene center (node centroid) — crowded blurbs get pushed away from it.
+		let cx=0, cy=0, count=0;
+		self.nodes.forEach(node=>{ cx+=node.x; cy+=node.y; count++; });
+		if(count===0) labels.forEach(l=>{ cx+=l.x; cy+=l.y; count++; });
+		cx/=count||1; cy/=count||1;
+
+		// Step 1 — park blurbs that land on a node out into open space, and
+		// (unless the author already aimed a leader) draw a leader line back to
+		// the zone they were covering. This applies the "blurb off to the side
+		// pointing at the zone" behaviour automatically to crowded imports.
+		const inside = (x,y,box)=> x>=box.left && x<=box.right && y>=box.top && y<=box.bottom;
+		for(const lbl of labels){
+			if(!nodeBoxes.some(nb=>hit(lbl.getBoundingBox(),nb))) continue;
+			const originX = lbl.x, originY = lbl.y;
+			// Only auto-attach a leader when the blurb was sitting ON a node
+			// (its center inside the node) — a strong sign it annotates that
+			// zone. A blurb merely clipping a node's edge just gets moved.
+			const annotatesNode = nodeBoxes.some(nb=>inside(originX,originY,nb));
+			let dx = lbl.x-cx, dy = lbl.y-cy;
+			if(Math.abs(dx)<1 && Math.abs(dy)<1){ dx=1; dy=0; } // dead-center → go right
+			const len = Math.hypot(dx,dy)||1; dx/=len; dy/=len;
+			let guard=0;
+			while(guard++<300 && nodeBoxes.some(nb=>hit(lbl.getBoundingBox(),nb))){
+				lbl.x += dx*18; lbl.y += dy*18;
+			}
+			if(!lbl.leader && annotatesNode){
+				lbl.leader = 1;
+				lbl.arrowX = Math.round(originX);
+				lbl.arrowY = Math.round(originY);
+			}
+		}
+
+		// Step 2 — settle: push labels apart from each other and off node boxes.
+		const MAX_ITER = 120;
 		for(let iter=0; iter<MAX_ITER; iter++){
 			let moved = false;
+
+			// label vs label (both move)
 			for(let i=0; i<labels.length; i++){
 				for(let j=i+1; j<labels.length; j++){
-					const a = labels[i].getBoundingBox();
-					const b = labels[j].getBoundingBox();
-					const overlapX = Math.min(a.right,b.right) - Math.max(a.left,b.left) + PAD;
-					const overlapY = Math.min(a.bottom,b.bottom) - Math.max(a.top,b.top) + PAD;
-					if(overlapX<=0 || overlapY<=0) continue; // no collision
-
+					const h = hit(labels[i].getBoundingBox(), labels[j].getBoundingBox());
+					if(!h) continue;
 					moved = true;
+					const a=labels[i].getBoundingBox(), b=labels[j].getBoundingBox();
 					const acx=(a.left+a.right)/2, acy=(a.top+a.bottom)/2;
 					const bcx=(b.left+b.right)/2, bcy=(b.top+b.bottom)/2;
-					if(overlapX < overlapY){
-						const push = overlapX/2;
-						const dir = (acx<=bcx) ? 1 : -1;
-						labels[i].x -= dir*push;
-						labels[j].x += dir*push;
+					if(h.ox < h.oy){
+						const push=h.ox/2, dir=(acx<=bcx)?1:-1;
+						labels[i].x-=dir*push; labels[j].x+=dir*push;
 					}else{
-						const push = overlapY/2;
-						const dir = (acy<=bcy) ? 1 : -1;
-						labels[i].y -= dir*push;
-						labels[j].y += dir*push;
+						const push=h.oy/2, dir=(acy<=bcy)?1:-1;
+						labels[i].y-=dir*push; labels[j].y+=dir*push;
 					}
 				}
 			}
+
+			// label vs node (only the label moves — nodes are fixed)
+			for(const lbl of labels){
+				for(const nb of nodeBoxes){
+					const h = hit(lbl.getBoundingBox(), nb);
+					if(!h) continue;
+					moved = true;
+					const a=lbl.getBoundingBox();
+					const acx=(a.left+a.right)/2, acy=(a.top+a.bottom)/2;
+					const ncx=(nb.left+nb.right)/2, ncy=(nb.top+nb.bottom)/2;
+					if(h.ox < h.oy) lbl.x += (acx<=ncx?-1:1)*h.ox;
+					else            lbl.y += (acy<=ncy?-1:1)*h.oy;
+				}
+			}
+
 			if(!moved) break;
 		}
 	};
